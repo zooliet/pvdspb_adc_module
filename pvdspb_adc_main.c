@@ -92,12 +92,12 @@ ssize_t pvdspb_adc1_read(struct file *filp, char __user *buf, size_t count, loff
 	  local_cnt = adc1_next_cnt - 1;
 	}
 	
-	if(reqd_num_set < (local_cnt + 1)) { // Case 1: memory copy at once
-		if((err = copy_to_user(buf, adc1_buf + ((local_cnt - reqd_num_set) * NUM_SAMPLES), count)) < 0) {
+	if(reqd_num_set <= (local_cnt + 1)) { // Case 1: memory copy at once
+		if((err = copy_to_user(buf, adc1_buf + ((local_cnt - reqd_num_set + 1) * NUM_SAMPLES), count)) < 0) {
 	  	return(err);
 	  }
 	} else {  // Case 2: memory copy in two stage
-		second_half = local_cnt;
+		second_half = local_cnt + 1;
 		first_half = reqd_num_set - second_half;
 
 		if((err = copy_to_user(buf, adc1_buf + ((BUF_MAX_CNT + 1 - first_half) * NUM_SAMPLES), first_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
