@@ -5,8 +5,8 @@
 #define	PVDSPB_ADC_NUM_DEVS	1	/* ADC1 only, at this moment */
 #define SAMPLE_SIZE		2	/* 16 bit */
 #define NUM_SAMPLES		256	/* 256 samples per set */
-#define BUF_MAX_CNT		15	/* 16 sets per buffer */
-#define BUF_MIN_CNT		0	/* Do not change this value */
+#define BUF_MAX_CNT		19	/* 16 sets per buffer + 4 overlay buffer by hl1sqi  */
+#define BUF_MIN_CNT		3       /* changed from 0 to 3 by hl1sqi */	
 #define BUF_SIZE		8192	/* Buffer size : 256*16*2 */
 
 #define ADC1_INTRT		171
