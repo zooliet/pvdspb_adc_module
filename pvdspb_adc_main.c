@@ -103,7 +103,7 @@ ssize_t pvdspb_adc1_read(struct file *filp, char __user *buf, size_t count, loff
 		if((err = copy_to_user(buf, adc1_buf + ((BUF_MAX_CNT + 1 - first_half) * NUM_SAMPLES), first_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
 			return(err);
 		} 
-		if((err = copy_to_user(buf + (first_half * NUM_SAMPLES), adc1_buf, second_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
+		if((err = copy_to_user(buf + (first_half * SAMPLE_SIZE * NUM_SAMPLES), adc1_buf, second_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
 			return(err);
 		} 
 	}
