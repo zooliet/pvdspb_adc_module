@@ -1,0 +1,1 @@
+cmd_/home/hl1sqi/work/ultrasound/pv_adc_module/pvdspb_adc/pvdspb_adc.o := arm-linux-gnueabihf-ld -EL    -r -o /home/hl1sqi/work/ultrasound/pv_adc_module/pvdspb_adc/pvdspb_adc.o /home/hl1sqi/work/ultrasound/pv_adc_module/pvdspb_adc/pvdspb_adc_main.o 

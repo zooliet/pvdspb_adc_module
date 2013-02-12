@@ -1,0 +1,4 @@
+*.o
+*.ko
+./pvdspb_adc.mod.c
+.tmp_versions/

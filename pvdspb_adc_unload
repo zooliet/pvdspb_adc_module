@@ -1,0 +1,11 @@
+#!/bin/sh
+module="pvdspb_adc"
+device="pvdspb_adc"
+
+# invoke rmmod with all arguments we got
+/sbin/rmmod $module $* || exit 1
+
+# Remove stale nodes
+
+rm -f /dev/${device}1 
+
