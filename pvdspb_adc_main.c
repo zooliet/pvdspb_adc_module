@@ -24,7 +24,7 @@ int pvdspb_adc_major = PVDSPB_ADC_MAJOR;
 int pvdspb_adc_firstminor = 0;
 int pvdspb_adc_num_devs = PVDSPB_ADC_NUM_DEVS;	/* Num. of devices */
 
-unsigned int adc1_cur_cnt;
+unsigned int adc1_next_cnt; // unsigned int adc1_cur_cnt;
 u16 *adc1_buf;
 
 void __iomem *fpga_vir_addr, *adc1_vir_addr;
@@ -38,19 +38,26 @@ static struct cdev *pvdspb_adc1_cdev;
 
 irqreturn_t adc1_isr(int irq, void *dev_id, struct pt_regs *regs) {
 
-	memcpy(adc1_buf + (adc1_cur_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-	memset(adc1_buf + (adc1_cur_cnt * NUM_SAMPLES), adc1_cur_cnt, SAMPLE_SIZE * NUM_SAMPLES); /* added by hl1sqi for nserting known pattern */
+	memcpy(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
+	/* added by hl1sqi for nserting known pattern */
+	memset(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_next_cnt, SAMPLE_SIZE * NUM_SAMPLES); 
 
 	/*  hl1sqi: want to make it linear buffer   */  
-	if(adc1_cur_cnt > BUF_MAX_CNT - 4) {
-	  memcpy(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-	  memset(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_cur_cnt%16, SAMPLE_SIZE * NUM_SAMPLES);
-	}
-
-	if(adc1_cur_cnt == BUF_MAX_CNT) {
-		adc1_cur_cnt = BUF_MIN_CNT;
+	// if(adc1_cur_cnt > BUF_MAX_CNT - 4) {
+	//   memcpy(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
+	//   memset(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_cur_cnt%16, SAMPLE_SIZE * NUM_SAMPLES);
+	// }
+	// 
+	// if(adc1_cur_cnt == BUF_MAX_CNT) {
+	// 	adc1_cur_cnt = BUF_MIN_CNT;
+	// } else {
+	// 	adc1_cur_cnt++;
+	// }
+	
+	if(adc1_next_cnt == BUF_MAX_CNT) {
+		adc1_next_cnt = BUF_MIN_CNT;
 	} else {
-		adc1_cur_cnt++;
+		adc1_next_cnt++;
 	}
 
 	return IRQ_HANDLED;
@@ -68,20 +75,45 @@ int pvdspb_adc1_release(struct inode *inode, struct file *filp) {
 ssize_t pvdspb_adc1_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos) {
 	ssize_t retval = count;
 	int err, adc1_prev_cnt;
+	unsigned int first_half, second_half, local_cnt, reqd_num_set;
 
-/*
-	if(adc1_cur_cnt == BUF_MIN_CNT) {
-		adc1_prev_cnt = BUF_MAX_CNT;
+	reqd_num_set = count / SAMPLE_SIZE / NUM_SAMPLES;     // requested numbers of sample sets
+	if((reqd_num_set <= 0) || (reqd_num_set > (BUF_MAX_CNT - BUF_MIN_CNT +1))) {
+		printk(KERN_WARNING "pvdspb_adc: requested number of sample sets exceeds total number of sample sets in the buffer.\n");
+		return (-1);
+	}
+	
+	/* hl1oap                                                       */
+	/* local_cnt is introduced to prevent count number change by    */
+	/* interrupt during the read() execution                        */
+	if(adc1_next_cnt == 0) {
+		local_cnt = BUF_MAX_CNT;
 	} else {
-		adc1_prev_cnt = adc1_cur_cnt - 1;
+	  local_cnt = adc1_next_cnt - 1;
 	}
-*/
-	adc1_prev_cnt = adc1_cur_cnt - 4;
+	
+	if(reqd_num_set < (local_cnt + 1)) { // Case 1: memory copy at once
+		if((err = copy_to_user(buf, adc1_buf + ((local_cnt - reqd_num_set) * NUM_SAMPLES), count)) < 0) {
+	  	return(err);
+	  }
+	} else {  // Case 2: memory copy in two stage
+		second_half = local_cnt;
+		first_half = reqd_num_set - second_half;
 
-	// if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
-	if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * count)) < 0) {
-		retval = err;
+		if((err = copy_to_user(buf, adc1_buf + ((BUF_MAX_CNT + 1 - first_half) * NUM_SAMPLES), first_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
+			return(err);
+		} 
+		if((err = copy_to_user(buf + (first_half * NUM_SAMPLES), adc1_buf, second_half * SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
+			return(err);
+		} 
 	}
+
+	// adc1_prev_cnt = adc1_cur_cnt - 4;
+	// 
+	// // if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
+	// if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * count)) < 0) {
+	// 	retval = err;
+	// }
 
 	return retval;
 }
@@ -178,7 +210,7 @@ static int __init pvdspb_adc_init_module(void) {
 		goto fail;
 	} else {
 		memset(adc1_buf, 0, BUF_SIZE);
-		adc1_cur_cnt = 0;
+		adc1_next_cnt = 0;  //adc1_cur_cnt = 0;
 	}
 
 	/* Setup GPIO 171 as interrupt source for ADC1 */
