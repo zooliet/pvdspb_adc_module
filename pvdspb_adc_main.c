@@ -37,12 +37,8 @@ MODULE_LICENSE("Dual BSD/GPL");
 static struct cdev *pvdspb_adc1_cdev;
 
 irqreturn_t adc1_isr(int irq, void *dev_id, struct pt_regs *regs) {
-
 	
-	// memcpy(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-
- 	/* added by hl1sqi for inserting known pattern */
-	memset(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_next_cnt, SAMPLE_SIZE * NUM_SAMPLES);
+	memcpy(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
 
 	if(adc1_next_cnt == BUF_MAX_CNT) {
 		adc1_next_cnt = BUF_MIN_CNT;
@@ -67,8 +63,7 @@ ssize_t pvdspb_adc1_read(struct file *filp, char __user *buf, size_t count, loff
 	int err;
 	unsigned int first_half, second_half, local_cnt, reqd_num_set;
 
-	//reqd_num_set = count / SAMPLE_SIZE / NUM_SAMPLES;	// requested numbers of sample sets
-	reqd_num_set = count / NUM_SAMPLES;	// requested numbers of sample sets
+	reqd_num_set = count / SAMPLE_SIZE / NUM_SAMPLES;	// requested numbers of sample sets
 
 	if((reqd_num_set <= 0) || (reqd_num_set > (BUF_MAX_CNT - BUF_MIN_CNT +1))) {
 		printk(KERN_WARNING "pvdspb_adc: requested number of sample sets exceeds total number of sample sets in the buffer.\n");
