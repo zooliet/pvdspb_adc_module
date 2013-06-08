@@ -22,7 +22,8 @@ else
 
 #KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 #KERNELDIR ?= /workspace/devel/pv_dspb3725/kernel/kernel/kernel
-KERNELDIR ?= /home/hl1sqi/work/labs/kernel/kernel
+#KERNELDIR ?= /home/hl1sqi/work/labs/kernel/kernel
+KERNELDIR ?= /home/hl1sqi/work/beagles/Kernel/kernel-pvadc/kernel
 PWD       := $(shell pwd)
 
 modules:

@@ -2,3 +2,9 @@
 *.ko
 *.mod.c
 .tmp_versions/
+.pvdspb_adc.ko.cmd
+.pvdspb_adc.mod.o.cmd
+.pvdspb_adc.o.cmd
+.pvdspb_adc_main.o.cmd
+Module.symvers
+modules.order
