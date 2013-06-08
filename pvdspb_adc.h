@@ -6,7 +6,7 @@
 #define SAMPLE_SIZE		2	/* 16 bit */
 #define NUM_SAMPLES		256	/* 256 samples per set */
 #define BUF_MAX_CNT		15	/* 16 sets per buffer  */
-#define BUF_MIN_CNT		0   /* Do not change this value */	
+#define BUF_MIN_CNT		0       /* Do not change this value */	
 #define BUF_SIZE		8192	/* Buffer size : 256*16*2 */
 
 #define ADC1_INTRT		171
