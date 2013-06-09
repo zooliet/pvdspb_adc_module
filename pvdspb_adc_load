@@ -13,7 +13,7 @@ fi
 
 # invoke insmod with all arguments we got
 # and use a pathname, as newer modutils don't look in . by default
-/sbin/insmod ./$module.ko $* || exit 1
+/sbin/insmod /home/hl1sqi/work/ultrasound/pvdspb_adc_module/$module.ko $* || exit 1
 
 major=`grep ${module} /proc/devices | awk '{print \$1}'`
 
