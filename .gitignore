@@ -1,5 +1,4 @@
 *.o
-*.ko
 *.mod.c
 .tmp_versions/
 .pvdspb_adc.ko.cmd
