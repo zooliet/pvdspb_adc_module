@@ -39,21 +39,8 @@ static struct cdev *pvdspb_adc1_cdev;
 irqreturn_t adc1_isr(int irq, void *dev_id, struct pt_regs *regs) {
 
 	memcpy(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-	/* added by hl1sqi */
-        // if you want to work with known patterns, uncomment the line below
 	// memset(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_next_cnt, SAMPLE_SIZE * NUM_SAMPLES); 
-
-	/*  hl1sqi: want to make it linear buffer   */  
-	// if(adc1_cur_cnt > BUF_MAX_CNT - 4) {
-	//   memcpy(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-	//   memset(adc1_buf + ((adc1_cur_cnt%16) * NUM_SAMPLES), adc1_cur_cnt%16, SAMPLE_SIZE * NUM_SAMPLES);
-	// }
-	// 
-	// if(adc1_cur_cnt == BUF_MAX_CNT) {
-	// 	adc1_cur_cnt = BUF_MIN_CNT;
-	// } else {
-	// 	adc1_cur_cnt++;
-	// }
+  // hl1sqi: Instead of reading from ADC, a known pattern will be read out so that we can verify the upper layer.
 	
 	if(adc1_next_cnt == BUF_MAX_CNT) {
 		adc1_next_cnt = BUF_MIN_CNT;
@@ -64,8 +51,7 @@ irqreturn_t adc1_isr(int irq, void *dev_id, struct pt_regs *regs) {
 	return IRQ_HANDLED;
 }
 
-int pvdspb_adc1_open(struct inode *inode, struct file *filp) {
-	
+int pvdspb_adc1_open(struct inode *inode, struct file *filp) {	
 	return nonseekable_open(inode, filp);
 }
 
@@ -108,13 +94,6 @@ ssize_t pvdspb_adc1_read(struct file *filp, char __user *buf, size_t count, loff
 			return(err);
 		} 
 	}
-
-	// adc1_prev_cnt = adc1_cur_cnt - 4;
-	// 
-	// // if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * NUM_SAMPLES)) < 0) {
-	// if((err = copy_to_user(buf, adc1_buf + (adc1_prev_cnt * NUM_SAMPLES), SAMPLE_SIZE * count)) < 0) {
-	// 	retval = err;
-	// }
 
 	return retval;
 }
@@ -183,6 +162,7 @@ static int __init pvdspb_adc_init_module(void) {
 		result = alloc_chrdev_region(&dev, pvdspb_adc_firstminor, pvdspb_adc_num_devs, "pvdspb_adc");
 		pvdspb_adc_major = MAJOR(dev);
 	}
+
 	if(result < 0) {
 		printk(KERN_WARNING "pvdspb_adc1: major number allocation failed\n");
 		goto fail;
