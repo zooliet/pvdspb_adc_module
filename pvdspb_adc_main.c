@@ -39,7 +39,8 @@ static struct cdev *pvdspb_adc1_cdev;
 irqreturn_t adc1_isr(int irq, void *dev_id, struct pt_regs *regs) {
 
 	memcpy(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_vir_addr, SAMPLE_SIZE * NUM_SAMPLES);
-	/* added by hl1sqi for inserting known pattern */
+	/* added by hl1sqi */
+        // if you want to work with known patterns, uncomment the line below
 	// memset(adc1_buf + (adc1_next_cnt * NUM_SAMPLES), adc1_next_cnt, SAMPLE_SIZE * NUM_SAMPLES); 
 
 	/*  hl1sqi: want to make it linear buffer   */  
