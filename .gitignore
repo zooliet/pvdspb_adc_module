@@ -8,3 +8,4 @@
 .pvdspb_adc_main.o.cmd
 Module.symvers
 modules.order
+*.exe

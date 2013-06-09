@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define SAMPLES 1024
+#define SAMPLES 2048
 
 int main(void) {
         FILE    *fp;
